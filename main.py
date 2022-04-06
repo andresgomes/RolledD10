@@ -1,10 +1,13 @@
+from flask import Flask, render_template, request, redirect, session, flash, url_for
 import discord
 import asyncio
 import os
 import random
 
+app = Flask(__name__)
+
 client = discord.Client()
-defaut_difficult = 6
+deffaut_difficult = 6
 
 def simple_result(input_int):
     result_dice = []
@@ -37,36 +40,51 @@ def damage_block_result(input_int):
     result_dices.sort(reverse=True)
     return f'{hits} <- {result_dices}'
 
+#main web page
+@app.route('/')
+def index():
+    return render_template("index.html")
+
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
-
+#main discord bot
 @client.event
 async def on_message(message):
-    input_client = str(message.content).lower()
+    content = str(message.content).lower()
+    author = message.author.name
+    mention = message.author.mention
     #If just int roll 10
-    if input_client.isnumeric():
-        result = simple_result(int(input_client))
-        await message.channel.send(str(result))
+    if content.isnumeric():
+        result = simple_result(int(content))
+        await message.reply(str(result))
+        #await message.channel.response(str(result))
 
     #If start with 'a', count the hits in normal tests with difficult 6 if start with 'ha', count de damage and block
-    elif input_client.startswith('a') or input_client.startswith('ha'):
-        qtd_dices = ''.join([i for i in input_client if i.isdigit()])
+    elif content.startswith('a') or content.startswith('ha'):
+        qtd_dices = ''.join([i for i in content if i.isdigit()])
         result = ''
-        if input_client[1].isdigit():
-            result = right_result(int(qtd_dices), defaut_difficult)
-        elif input_client[2].isdigit():
+        if content[1].isdigit():
+            result = right_result(int(qtd_dices), deffaut_difficult)
+        elif content[2].isdigit():
             result = damage_block_result(int(qtd_dices))
-        await message.channel.send(result)
+        await message.reply(result)
 
     #If start with hd(int)a, use int to apply a another difficult
-    elif input_client.startswith('hd'):
-        difficult = int(input_client[2])
-        new_input_client = input_client[4: ]
+    elif content.startswith('hd'):
+        difficult = int(content[2])
+        new_input_client = content[4: ]
         qtd_dices = int(new_input_client)
         result = right_result(qtd_dices, difficult)
-        await message.channel.send(result)
+        await message.reply(result)
+
+#main web page
+def index():
+    return render_template('index.html')
+
 
 if __name__ == '__main__':
+    app.run(debug=True)
     client.run(os.getenv('TOKEN'))
+
