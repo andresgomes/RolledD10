@@ -3,6 +3,7 @@ import discord
 import asyncio
 import os
 import random
+from decouple import config
 
 app = Flask(__name__)
 
@@ -121,5 +122,6 @@ def index():
 
 
 if __name__ == '__main__':
-    # app.run()
+    #app.run()
+    client.run(config('TOKEN'))
     client.run(os.getenv('TOKEN'))
